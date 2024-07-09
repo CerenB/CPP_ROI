@@ -26,7 +26,7 @@ function atlasDir = returnAtlasDir(atlas)
         atlasDir = fullfile(atlasDir, 'visfAtlas');
 
       case 'hcpex'
-        atlasDir = fullfile(atlasDir, 'HCPex', 'HCPex_v1.0');
+        atlasDir = fullfile(atlasDir, 'HCPex', 'HCPex_v1.1');
 
       case 'glasser'
         atlasDir = fullfile(atlasDir, 'Glasser');
