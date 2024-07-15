@@ -4,12 +4,16 @@ clear all;
 clc;
 
 
-addpath('../../lib/bids-matlab');
+%addpath('../../lib/bids-matlab');
 
 warning('off');
 addpath(genpath('/Users/battal/Documents/MATLAB/spm12'));
 
-run ../../initCppRoi;
+% bidspm - use
+run ../lib/CPP_BIDS_SPM_pipeline/initCppSpm.m;
+
+%cpp_roi
+run /Users/battal/Documents/GitHub/CPPLab/CPP_ROI/initCppRoi;
 
 % to load the subjects
 opt = getOptionMoebius();
@@ -21,12 +25,12 @@ opt.roi.space = {'MNI', 'individual'};
 opt.roi.name = {'1', '2', '3a', '3b', '4','6a', '6d', '6v', 'FEF', 'PEF'};
 
 %define folders
-opt.roi.dir = fullfile(pwd, '..','output');
+opt.roi.dir = fullfile(opt.dataDir , '..','derivatives','roi');
 
 spm_mkdir(opt.roi.dir);
 
 % check the atlas labels
-[atlasFile, lut] = getAtlasAndLut(opt.roi.atlas);
+%[atlasFile, lut] = getAtlasAndLut(opt.roi.atlas);
 
 %define hemisphere
 hemi = {'L', 'R'};
