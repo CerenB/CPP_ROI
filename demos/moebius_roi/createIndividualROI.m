@@ -13,20 +13,6 @@ function createIndividualROI(opt)
 
   opt.jobsDir = fullfile(opt.dir.roi, 'JOBS', opt.taskName);
 
-%   hemi = {'lh', 'rh'};
-% 
-%   for iHemi = 1:numel(hemi)
-% 
-%     for iROI = 1:numel(opt.roi.name)
-% 
-%       extractRoiFromAtlas(fullfile(opt.dir.roi, 'group'), ...
-%                           opt.roi.atlas, ...
-%                           opt.roi.name{iROI}, ...
-%                           hemi{iHemi});
-% 
-%     end
-% 
-%   end
 
   if any(strcmp(opt.roi.space, 'individual'))
 
@@ -68,12 +54,19 @@ function createIndividualROI(opt)
       for iROI = 1:size(roiList, 1)
 
         roiImage = deblank(roiList(iROI, :));
-        roiImage = removeSpmPrefix(roiImage, ...
+        
+        % get the filename
+        p = bids.internal.parse_filename(spm_file(roiImage, 'filename'));
+        newPath = fullfile(opt.dir.roi, ['sub-' subLabel], 'roi');
+        newRoiImage = fullfile(newPath, p.filename);
+        %first move the image
+        movefile(roiImage, newRoiImage);
+        
+       % then rename it   
+        newRoiImage = removeSpmPrefix(newRoiImage, ...
                                          spm_get_defaults('realign.write.prefix'));
                                      
-        p = bids.internal.parse_filename(spm_file(roiImage, 'filename'));
-
-        %hemi-L_space-MNI_seg-hcpex_label-1_mask.nii
+        p = bids.internal.parse_filename(spm_file(newRoiImage, 'filename'));
         
         nameStructure = struct('entities', struct('sub',subLabel,...
                                                   'hemi', p.entities.hemi, ...
@@ -86,8 +79,7 @@ function createIndividualROI(opt)
                                'use_schema',false);
         newName = bids.create_filename(nameStructure);
 
-        movefile(roiImage, ...
-                 fullfile(opt.dir.roi, ['sub-' subLabel], 'roi', newName));
+        movefile(newRoiImage,fullfile(newPath, newName));
 
       end
 
