@@ -60,7 +60,11 @@ function [worldCoord, voxelCoord, maxVal] = getPeakCoordinates(varargin)
   data(~mask) = nan(1, sum(~mask(:)));
 
   % Get the location of the highest t-value in slice space
-  voxeIdx = find(data == maxVal);
+  if isempty(maxVal)
+      voxeIdx = 0;
+  else
+    voxeIdx = find(data == maxVal);
+  end
   if numel(voxeIdx) > 1
     % TODO return list of all maximums?
     warning('getPeakCoordinates:severalMaxBeyondThreshold', ...
