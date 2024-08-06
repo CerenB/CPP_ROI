@@ -11,23 +11,21 @@ function opt = getOptionMoebiusROI()
 
     % suject to run in each group
 
-%     opt.subjects = {'ctrl012','ctrl013'};
-                      % 'ctrl014': for mototopy
-% 
-%                      
+%     opt.subjects = {'ctrl014'};
+                      % 'ctrl014': for mototopy                  
     opt.subjects = {'mbs001', 'mbs002', 'mbs003', 'mbs004', 'mbs005', ...
                    'mbs006', 'mbs007', ...
-                    'ctrl002','ctrl003','ctrl004', 'ctrl005', 'ctrl007', ...
-                    'ctrl008', 'ctrl009', 'ctrl010', 'ctrl011', 'ctrl012', ...
-                    'ctrl013','ctrl015', 'ctrl016','ctrl017'};
+                    'ctrl001', 'ctrl002','ctrl003','ctrl004', 'ctrl005',...
+                    'ctrl007', 'ctrl008', 'ctrl009', 'ctrl010', 'ctrl011', ...
+                     'ctrl012', 'ctrl013','ctrl014', 'ctrl015', 'ctrl016','ctrl017'};
 
     % The directory where the data are located
     opt.dataDir = fullfile('/Users/battal/Cerens_files/fMRI/Processed/MoebiusProject/raw');
     opt.derivativesDir = fullfile(opt.dataDir, '..', 'derivatives','cpp_spm');
 
     % task to analyze
-%     opt.taskName = 'mototopy';
-    opt.taskName = 'somatotopy';
+    opt.taskName = 'mototopy';
+%     opt.taskName = 'somatotopy';
     
 
     % Suffix output directory for the saved jobs

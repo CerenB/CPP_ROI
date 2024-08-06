@@ -7,13 +7,13 @@ function [voxels] = findPeakCoordinates(opt)
 % set output folder/name
 savefileMat = fullfile(opt.dir.roi, 'group', ...
     [opt.taskName, ...
-    'PeakVoxels_', ...
+    'PeakVoxels_unthreshTmaps', ...
     opt.roi.atlas, ...
     '_', datestr(now, 'yyyymmddHHMM'), '.mat']);
 
 savefileCsv = fullfile(opt.dir.roi, 'group', ...
     [opt.taskName, ...
-    'PeakVoxels_', ...
+    'PeakVoxels_unthreshTmaps', ...
     opt.roi.atlas, ...
     '_', datestr(now, 'yyyymmddHHMM'), '.csv']);
 
@@ -39,8 +39,6 @@ roiList = cellstr(roiList);
 
 
 % get data images to read
-
-
 for iSub = 1:numel(opt.subjects)
     
     subLabel = opt.subjects{iSub};
@@ -49,7 +47,7 @@ for iSub = 1:numel(opt.subjects)
     
     %read subject's spmT maps
     ffxDir = getFFXdir(subLabel, funcFWHM, opt);
-    spmTmaps = spm_select('FPList', ffxDir, '^sub-.*.GtAll_.*.k-20_MC-none.*spmT.nii$');
+    spmTmaps = spm_select('FPList', ffxDir, '^sub-.*.GtAll_.*.-099_k-0_MC-none_spmT.nii$'); % -099_k-0_MC-none_spmT k-20_MC-none_spmT
     
     % get to work
     for iRoi = 1:size(roiList,1)
@@ -89,9 +87,9 @@ for iSub = 1:numel(opt.subjects)
             voxels(c).coordinateX = voxelCoord(1);
             voxels(c).coordinateY = voxelCoord(2);
             voxels(c).coordinateZ = voxelCoord(3);
-            voxels(c).wordX = worldCoord(1);
-            voxels(c).wordY = worldCoord(2);
-            voxels(c).wordZ = worldCoord(3);
+            voxels(c).worldCoordX = worldCoord(1);
+            voxels(c).worldCoordY = worldCoord(2);
+            voxels(c).worldCoordZ = worldCoord(3);
             voxels(c).tValue = maxVal;
             voxels(c).ffxSmooth = funcFWHM;
             
