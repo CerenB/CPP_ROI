@@ -7,7 +7,10 @@ library(Rmisc)
 pathResults <- '/Users/battal/Cerens_files/fMRI/Processed/MoebiusProject/derivatives/cpp_spm-roi/group/'
 
 ########
-data <- read.csv(paste(pathResults, 'mototopyCoGCoordandVoxelNbforROIs_unthreshhcpex_202407301623.csv', sep ='/'))
+data <- read.csv(paste(pathResults, 'mototopyCoGCoordandVoxelNbforROIs_unthreshhcpex_label4_202409251138.csv', sep ='/'))
+
+# mototopy with M1 (area 4) mask
+# mototopyCoGCoordandVoxelNbforROIs_unthreshhcpex_label4_202409251138
 
 # somatotopyCoGCoordandVoxelNbforROIs_unthreshhcpex_202407291230
 # mototopyCoGCoordandVoxelNbforROIs_unthreshhcpex_202407301623
@@ -139,7 +142,11 @@ print(t_test_results)
 pathResults <- '/Users/battal/Cerens_files/fMRI/Processed/MoebiusProject/derivatives/cpp_spm-roi/group/'
 
 ########
-data <- read.csv(paste(pathResults, 'mototopyCoGDistance_unthreshhcpex_202407301623.csv', sep ='/'))
+data <- read.csv(paste(pathResults, 'mototopyCoGDistance_unthreshhcpex_label4_202409251138.csv', sep ='/'))
+
+# moto within area M1 (label4)
+# mototopyCoGDistance_unthreshhcpex_label4_202409251138
+
 # somatotopyCoGDistance_unthreshhcpex_202407291232
 # 
 head(data)
@@ -187,61 +194,6 @@ p
 
 
 
-##### DOESNT WORK CURRENTLY
-# WHAT WE wanted is to reoder the x-axis pairs
-
-
-# Calculate summary statistics with mean and standard error
-summary_stats <- data %>%
-  group_by(Hemi, Group, Pair) %>%
-  summarize(
-    mean_Distance = mean(Distance, na.rm = TRUE),
-    n_subjects = sum(!is.na(Distance)),  # Number of non-missing values
-    SE = sd(Distance, na.rm = TRUE) / sqrt(n_subjects),  # Standard Error
-    .groups = 'drop'
-  )
-
-# Check the summary statistics
-print(summary_stats)
-
-# Desired order of pairs
-desired_order <- c("Foot-Tongue", "Hand-Tongue", "Forehead-Tongue", "Lips-Tongue",
-                   "Foot-Hand", "Hand-Forehead", "Foot-Lips", "Hand-Lips",
-                   "Foot-Forehead", "Lips-Forehead")
-
-# Reorder the Pair factor in data and summary_stats
-data$Pair <- factor(data$Pair, levels = desired_order)
-summary_stats$Pair <- factor(summary_stats$Pair, levels = desired_order)
-
-# Create the plot
-p <- ggplot(data, aes(x = Pair, y = Distance, color = Group)) +
-  geom_jitter(position = position_dodge(0.5), size = 2) +
-  geom_errorbar(data = summary_stats, aes(ymin = mean_Distance - SE, ymax = mean_Distance + SE), 
-                width = 0.2, position = position_dodge(0.5), color = "black") +
-  geom_point(data = summary_stats, aes(y = mean_Distance), position = position_dodge(0.5), size = 3, shape = 18, color = "black") +
-  facet_grid(. ~ Hemi) +  # Facet by Hemi
-  theme_bw() +
-  labs(
-    title = "Mean and Standard Deviation of Distance by Group and Hemisphere",
-    x = "BodyParts",
-    y = "Distance",
-    color = "Group"
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)  # Tilt x-axis labels if needed
-  )
-
-# Display the plot
-print(p)
-
-
-
-
-
-
-
-
-
 
 
 ######
@@ -281,3 +233,532 @@ p <- ggplot(df, aes(x = Pair, y = Distance, color = Group)) +
 
 # Print the plot
 p
+
+
+
+
+
+
+
+
+
+
+# 06/08/2024
+#####
+
+# work on somatotopy and mototopy data together to make comparisons later on
+
+#####
+
+
+
+# CoG euclidean distances 
+pathResults <- '/Users/battal/Cerens_files/fMRI/Processed/MoebiusProject/derivatives/cpp_spm-roi/group/'
+
+########
+datam <- read.csv(paste(pathResults, 'mototopyCoGDistance_unthreshhcpex_label4_202409251138.csv', sep ='/'))
+datas <- read.csv(paste(pathResults, 'somatotopyCoGDistance_unthreshhcpex_202407291232.csv', sep ='/'))
+
+# motor area M1 for mototopy data
+# mototopyCoGDistance_unthreshhcpex_label4_202409251138
+
+# mototopy in label123ab 
+# mototopyCoGDistance_unthreshhcpex_202407301623
+
+
+datam$Exp <- 'moto'
+datas$Exp <- 'somato'
+data<- rbind(datam, datas)
+
+head(data)
+
+data <- data %>%
+  filter(!is.nan(Distance))
+
+# make a column related to pairs of face pairs vs. non-face pairs
+data$Category <- ifelse(
+    data$Pair == "Foot-Hand", "no-face",
+    ifelse(data$Pair %in% c("Lips-Tongue", "Forehead-Lips", "Forehead-Tongue"), "face", "mixed")
+    )
+
+#####
+# 0. try plotting the pairs as they are, with somato/moto next to each other 
+# make a new column for plot organisation
+
+# Replace 'Forehead' with 'Fore' and 'Tongue' with 'T' in the Pair column
+data$Pair <- gsub("Forehead", "Fore", data$Pair)
+data$Pair <- gsub("Tongue", "T", data$Pair)
+
+# View the updated Pair column
+head(data$Pair)
+
+
+data <- data %>%
+  mutate(PairExp = ifelse(
+    Exp == "moto", paste0(Pair, "-m"),
+    paste0(Pair, "-s")
+  ))
+
+# View the updated data
+head(data)
+
+
+#####
+
+# plotting moto/somato side by side by using alpha/ opacity - not so great
+# bar plot 
+
+#####
+df <- summarySE(data = data, 
+                groupvars=c('PairExp','Group','Hemi', 'Exp'),
+                measurevar='Distance', na.rm = TRUE)
+df
+
+p<- ggplot(df, aes(x = PairExp, y = Distance, fill = Group, alpha = Exp)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  facet_grid(~ Hemi) + 
+  labs(x = "Pair and Experiment", y = "CoG Euclidian Distance", title = "Pairise Distance by Exp and BodyParts") +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  scale_alpha_manual(values = c("moto" = 0.8, "somato" = 0.4))
+
+p
+
+
+#####
+
+# BETTER alternative split them into different colors
+
+#####
+# titleX = "BodyPart pairs"
+# titleY = "CoG Euc Distance"
+# titleMid = "Pairwise Euclidean Distance by BodyParts"
+# 
+# df <- summarySE(data = data,
+#                 groupvars=c('Pair','Group','Hemi', 'Exp'),
+#                 measurevar='Distance', na.rm = TRUE)
+# df
+# 
+# p<- ggplot(df, aes(x = Pair, y = Distance, color = interaction(Group, Exp))) +
+#   geom_point(position = position_dodge(width = 0.8), size = 3) +
+#   geom_errorbar(aes(ymin = Distance - se, ymax = Distance + se),
+#                 width = 0.2, position = position_dodge(width = 0.8)) +
+#   facet_grid(Hemi ~ .) +
+#   labs(x = titleX, y = titleY, title = titleMid) +
+#   theme_minimal() +
+#   theme(
+#     strip.text = element_text(size = 12),
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     panel.grid.major.x = element_blank(), # Optional, to reduce grid lines on x
+#     panel.grid.minor.x = element_blank()
+#   ) +
+#   scale_color_manual(values = c(
+#     "ctrl.moto" = "#FF6666", "ctrl.somato" = "#FFCCCC",
+#     "mbs.moto" = "#6666FF", "mbs.somato" = "#CCCCFF"
+#   ))
+# 
+# p
+# 
+
+# modify a bit further
+p <- ggplot(df, aes(x = Pair, y = Distance, color = interaction(Group, Exp))) +
+  # Add jittered individual data points
+  geom_jitter(data = data,
+              aes(x = Pair, y = Distance, color = interaction(Group, Exp)),
+              position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.8),
+              size = 1.5, alpha = 0.5) +
+  # Add summary points (mean) with dodge positioning
+  geom_point(position = position_dodge(width = 0.8), size = 3) + 
+  # Add error bars with dodge positioning
+  geom_errorbar(aes(ymin = Distance - se, ymax = Distance + se), 
+                width = 0.2, position = position_dodge(width = 0.8)) +
+  # Facet wrap by Hemi
+  facet_wrap(~ Hemi) +
+  # Labels and theme customization
+  labs(x = titleX, y = titleY, title = titleMid, color = "Groups") +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 12, hjust = 0.5),  # Adjust text size and alignment
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major.x = element_blank(), # Optional, to reduce grid lines on x
+    panel.grid.minor.x = element_blank(),
+    legend.position = "top"  # Place legend in the top
+  ) +
+  # Custom color scheme
+  scale_color_manual(values = c(
+    "ctrl.moto" = "#FF6666", "ctrl.somato" = "#FFCCCC",
+    "mbs.moto" = "#6666FF", "mbs.somato" = "#CCCCFF"
+  ))
+
+# Print the plot
+print(p)
+
+# save the plot
+filename <- paste(pathResults, "PairwiseCoGDistancePlot_MotoSomato_individualDots.png", sep = '')
+ggsave(filename, plot = p, width = 18, height = 6, units = "in", dpi = 300)
+
+
+# Now with average values instead of individual dots
+# modify a bit further
+
+# example 
+datam <- data %>% filter(Exp == "moto")
+datas <- data %>% filter(Exp == "somato")
+
+df <- summarySE(data = datam, 
+                groupvars=c('Pair','Group','Hemi'),
+                measurevar='Distance', na.rm = TRUE)
+df
+
+
+df2 <- summarySE(data = datas, 
+                groupvars=c('Pair','Group','Hemi'),
+                measurevar='Distance', na.rm = TRUE)
+df2
+
+# Define custom x-axis labels
+custom_labels <- c('Foot-Fore', 'Foot-Hand', 'Foot-Lips', 'Foot-T', 
+                   'Fore-Hand', 'Fore-Lips', 'Fore-T', 
+                   'Hand-Lips', 'Hand-T', 'Lips-T')
+
+
+p <- ggplot(df2, aes(x = Pair, y = Distance, color = Group)) +
+  # Add summary points (mean) with dodge positioning
+  geom_point(position = position_dodge(width = 0.8), size = 6) + 
+  # Add error bars with dodge positioning
+  geom_errorbar(aes(ymin = Distance - se, ymax = Distance + se), 
+                width = 0.2, position = position_dodge(width = 0.8)) +
+  # Facet wrap by Hemi
+  facet_wrap(~ Hemi) +
+  # Set fixed y-axis range
+  ylim(0, 45) +  # Fix the y-axis range from 0 to 40
+  # Labels and theme customization
+  labs(x = titleX, y = titleY,color = "Groups") +
+  theme_minimal() +
+  theme(
+    # Increase axis title sizes
+    axis.title.x = element_text(size = 24),
+    axis.title.y = element_text(size = 24),
+    
+    # Increase axis tick sizes
+    axis.text.x = element_text(size = 20, angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 20),
+    
+    # Increase legend title and text size
+    legend.title = element_text(size = 22),
+    legend.text = element_text(size = 20),
+    
+    # Increase facet label text size
+    strip.text = element_text(size = 22, hjust = 0.5),
+    
+    # Optional: Adjust panel grid and legend position
+    panel.grid.major.x = element_blank(),  # Optional, to reduce grid lines on x
+    panel.grid.minor.x = element_blank(),
+    legend.position = "top"  # Place legend on top
+  ) +
+  # Custom color scheme
+  scale_color_manual(values = c(
+    "ctrl" = "#FF6666", "mbs" = "#6666FF"
+  ))
+
+# Print the plot
+print(p)
+
+filename <- paste(pathResults, "PairwiseCoGDistancePlot_Somato_Averaged.pdf", sep = '')
+ggsave(filename, plot = p, width = 18, height = 6, units = "in", dpi = 300)
+
+
+
+
+
+
+#combine the data and separate again
+data <- rbind(datam,datas)
+
+
+# Prepare the data
+data$Pair <- as.factor(data$Pair)
+data$Group <- as.factor(data$Group)
+data$Exp <- as.factor(data$Exp)
+data$Hemi <- as.factor(data$Hemi)
+data$Category <- as.factor(data$Category)
+data$PairExp <- as.factor(data$PairExp)
+
+# # Assuming your data frame is named df
+# factor_columns <- sapply(data, is.factor)
+# 
+# # Print the result
+# factor_columns
+
+#####
+
+
+# # here let's check the stats - anova
+# anova_model <- aov(Distance ~ Pair * Group * Exp * Hemi, data = data)
+# 
+# # Check residuals for normality
+# qqnorm(anova_model$residuals)
+# qqline(anova_model$residuals)
+# 
+# # Shapiro-Wilk test for normality
+# shapiro.test(anova_model$residuals)
+# 
+# 
+# library(car)
+# leveneTest(Distance ~ Pair * Group * Exp * Hemi, data = data)
+
+
+
+
+#####
+
+
+# fail at normality and homogeneity of the datasets.
+# two options: permmutation anova and or GLMs
+
+install.packages("permuco")
+library(permuco)
+# Fit permutation-based ANOVA model with unbalanced design
+# ignores random effect  (1 | Subject)
+perm_model <- aovperm(Distance ~ Pair * Group * Exp * Hemi, data = data, np = 2000)
+results<- summary(perm_model)
+print(results)
+
+# results_rounded <- as.data.frame(lapply(results, function(x) {
+#   if (is.numeric(x)) round(x, 3) else x
+# }))
+
+# Extract permutation results as a data frame
+filename <- paste(pathResults, "permutationAnovaTable_MotoSomato_CoGDistancePairwise.csv", sep = '')
+write.csv(results, filename)
+
+
+
+
+
+# divide data into2 
+datam <- data %>% filter(Exp == "moto")
+datas <- data %>% filter(Exp == "somato")
+
+#moto
+perm_model <- aovperm(Distance ~ Pair * Group * Hemi, data = datam, np = 2000)
+results<- summary(perm_model)
+print(results)
+
+# Extract permutation results as a data frame
+filename <- paste(pathResults, "permutationAnovaTable_Moto_CoGDistancePairwise.csv", sep = '')
+write.csv(results, filename)
+
+
+
+
+
+# somato
+perm_model <- aovperm(Distance ~ Pair * Group * Hemi, data = datas, np = 2000)
+results<- summary(perm_model)
+print(results)
+
+# Extract permutation results as a data frame
+filename <- paste(pathResults, "permutationAnovaTable_Somato_CoGDistancePairwise.csv", sep = '')
+write.csv(results, filename)
+
+
+
+
+
+#####
+# interaction Pair:Group
+#####
+
+
+# Prepare the data for interaction plotting
+# Create a new data frame that summarizes the interaction
+titleX = "BodyPart pairs"
+titleY = "Mean CoG Euc Distance"
+titleMid = "Interaction Pair:Group (PermutationANOVA)"
+
+df <- summarySE(data = data, 
+                groupvars=c('Pair','Group'),
+                measurevar='Distance', na.rm = TRUE)
+df
+
+p<- ggplot(df, aes(x = Pair, y = Distance, color = Group, shape = Group)) +
+  geom_point(size = 3) +
+  geom_line(aes(group = Group), linetype = "dashed") +
+  geom_errorbar(aes(ymin = Distance - se, ymax = Distance + se), width = 0.2) +
+  labs(x = titleX, y = titleY, color = "Group", title = titleMid) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels if needed
+
+p
+
+filename <- paste(pathResults, "PairGroup_Interaction_PairwiseCoGDistancePlot.png", sep = '')
+ggsave(filename, plot = p, width = 12, height = 6, units = "in", dpi = 300)
+
+
+
+
+
+
+
+#####
+# interaction Pair:Exp
+#####
+
+
+# Prepare the data for interaction plotting
+# Create a new data frame that summarizes the interaction
+titleX = "BodyPart pairs"
+titleY = "Mean CoG Euc Distance"
+titleMid = "Interaction Pair:Exp (PermutationANOVA)"
+
+df <- summarySE(data = data, 
+                groupvars=c('Pair','Exp'),
+                measurevar='Distance', na.rm = TRUE)
+df
+
+p<- ggplot(df, aes(x = Pair, y = Distance, color = Exp, shape = Exp)) +
+  geom_point(size = 3) +
+  geom_line(aes(group = Exp), linetype = "dashed") +
+  geom_errorbar(aes(ymin = Distance - se, ymax = Distance + se), width = 0.2) +
+  labs(x = titleX, y = titleY, color = "Exp", title = titleMid) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5))  # Rotate x-axis labels if needed
+
+p
+
+filename <- paste(pathResults, "PairExp_Interaction_PairwiseCoGDistancePlot.png", sep = '')
+ggsave(filename, plot = p, width = 12, height = 6, units = "in", dpi = 300)
+
+
+
+
+#####
+
+# not very meaningful this below plot, isn't it?
+# it shows the interaction(Group:Exp) which is not sig, 
+
+#####
+# first look at the only averages data (all pairs are averaged) x Groups x Exp
+# Summarize the data to calculate mean, standard deviation, and standard error
+titleX = "Experiments"
+titleY = "Mean CoG Euc Distance"
+titleMid = "Averaged Pairwise Distance by Experiments"
+
+df <- summarySE(data = data, 
+                groupvars=c('Group','Hemi', 'Exp'),
+                measurevar='Distance', na.rm = TRUE)
+df
+
+p <- ggplot(df, aes(x = Exp, y = Distance, color = Group)) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) + 
+  geom_errorbar(aes(ymin = Distance - se, ymax = Distance + se), 
+                width = 0.2, position = position_dodge(width = 0.8)) +
+  facet_wrap(~ Hemi) +  # Use facet_wrap for easier customization
+  labs(x = titleX, y = titleY, title = titleMid, color = "Groups") +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 14, hjust = 0.5),  # Increase facet labels size
+    axis.text.x = element_text(size = 12, angle = 0, hjust = 1),  # Increase x-axis text size
+    axis.text.y = element_text(size = 12),  # Increase y-axis text size
+    axis.title.x = element_text(size = 14),  # Increase x-axis title size
+    axis.title.y = element_text(size = 14),  # Increase y-axis title size
+    legend.text = element_text(size = 10),  # Increase legend text size
+    legend.title = element_text(size = 12),  # Increase legend title size
+    panel.grid.major.x = element_blank(),  # Optional, to reduce grid lines on x
+    panel.grid.minor.x = element_blank(),
+    legend.position = "top"  # Place legend in the top
+  ) +
+  scale_color_manual(values = c(
+    "mbs" = "#FF6666", 
+    "ctrl" = "#6666FF"
+  ))
+
+print(p)
+
+filename <- paste(pathResults, "ExpGroup_Interaction_PairwiseCoGDistancePlot.png", sep = '')
+ggsave(filename, plot = p, width = 8, height = 6, units = "in", dpi = 300)
+
+
+
+
+
+
+
+
+
+# second look at the face/no/face/mixed data split  x Groups x Exp
+# consider 3 (Category) face_wraps
+
+
+titleX = "BodyPart pairs"
+titleY = "CoG Euc Distance"
+titleMid = "Pairwise Euclidean Distance by BodyParts"
+
+df <- summarySE(data = data,
+                groupvars=c('Category','Group','Hemi', 'Exp'),
+                measurevar='Distance', na.rm = TRUE)
+df
+
+# modify a bit further
+
+p <- ggplot(df, aes(x = Category, y = Distance, color = interaction(Group, Exp))) +
+  geom_point(position = position_dodge(width = 0.8), size = 3) + 
+  geom_errorbar(aes(ymin = Distance - se, ymax = Distance + se), 
+                width = 0.2, position = position_dodge(width = 0.8)) +
+  facet_wrap(~ Hemi) +  # Use facet_wrap for easier customization
+  labs(x = titleX, y = titleY, title = titleMid, color = "Groups") +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 14, hjust = 0.5),  # Increase facet labels size
+    axis.text.x = element_text(size = 12, angle = 0, hjust = 1),  # Increase x-axis text size
+    axis.text.y = element_text(size = 12),  # Increase y-axis text size
+    axis.title.x = element_text(size = 14),  # Increase x-axis title size
+    axis.title.y = element_text(size = 14),  # Increase y-axis title size
+    legend.text = element_text(size = 10),  # Increase legend text size
+    legend.title = element_text(size = 12),  # Increase legend title size
+    panel.grid.major.x = element_blank(),  # Optional, to reduce grid lines on x
+    panel.grid.minor.x = element_blank(),
+    legend.position = "top"  # Place legend in the top
+  ) +
+  scale_color_manual(values = c(
+    "ctrl.moto" = "#FF6666", "ctrl.somato" = "#FFCCCC",
+    "mbs.moto" = "#6666FF", "mbs.somato" = "#CCCCFF"
+  ))
+
+print(p)
+
+# save the plot
+filename <- paste(pathResults, "PairwiseCoGDistancePlot_MotoSomato_3Categories.png", sep = '')
+ggsave(filename, plot = p, width = 12, height = 6, units = "in", dpi = 300)
+
+
+
+
+# let's do permutation anova for these pairs
+perm_model <- aovperm(Distance ~ Category * Group * Exp * Hemi, data = data, np = 2000)
+results<- summary(perm_model)
+print(results)
+
+
+# Extract permutation results as a data frame
+filename <- paste(pathResults, "permutationAnovaTable_MotoSomato_CoGDistancePairwise_3Categories.csv", sep = '')
+write.csv(results, filename)
+
+
+
+
+
+
+
+# copy pasted figure snippet from previous plot
+# change it according to the need
+# Define custom x-axis labels
+
+
+
+
+

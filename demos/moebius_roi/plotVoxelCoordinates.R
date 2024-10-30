@@ -12,7 +12,10 @@ library(Rmisc)
 pathResults <- '/Users/battal/Cerens_files/fMRI/Processed/MoebiusProject/derivatives/cpp_spm-roi/group/'
 
 ########
-data <- read.csv(paste(pathResults, 'mototopyPeakVoxels_unthreshTmapshcpex_202407301611.csv', sep ='/'))
+data <- read.csv(paste(pathResults, 'somatotopyPeakVoxels_unthreshTmapshcpex_202407291222.csv', sep ='/'))
+
+# mototopy in Area 4 
+# mototopyPeakVoxels_unthreshTmapshcpex_202409251121
 
 # somatotopyPeakVoxels_unthreshTmapshcpex_202407291222
 # mototopyPeakVoxels_unthreshTmapshcpex_202407301611
@@ -121,6 +124,94 @@ plotly_plot <- plot_ly(plotData, x = ~worldCoordX, y = ~worldCoordY, z = ~worldC
 # Display the plotly plot
 plotly_plot
 
+
+# going back to 2D plot - september 25th
+# Assuming you want to rename 'dataImageContrast' values with shorter labels
+plotData <- plotData %>%
+  mutate(dataImageContrast_short = recode(dataImageContrast,
+                                          "ForeheadGtAll" = "Forehead",
+                                          "FootGtAll" = "Toes",  
+                                          "HandGtAll" = "Thumbs",
+                                          "LipsGtAll" = "Lips",
+                                          "TongueGtAll" = "Tongue"))
+
+# 2D scatter plot
+plotly_plot <- plot_ly(plotData, 
+                       x = ~jitter(worldCoordX, amount = 0.1),  # Jitter on X-axis
+                       y = ~jitter(worldCoordZ, amount = 0.1),  # Jitter on Y-axis
+                       color = ~dataImageContrast_short, 
+                       symbol = ~group, 
+                       symbols = c("circle", "square"),  # Adjust symbol types as needed
+                       type = 'scatter', 
+                       mode = 'markers', 
+                       marker = list(size = 8)) %>%
+  layout(
+    xaxis = list(
+      title = list(
+        text = "X-axis",
+        font = list(size = 24)  # Font size for X-axis label
+      ),
+      range = c(-90, 90), 
+      tickfont = list(size = 18)  # Font size for X-axis ticks
+    ),
+    yaxis = list(
+      title = list(
+        text = "Y-axis",
+        font = list(size = 24)  # Font size for Y-axis label
+      ),
+      range = c(10, 80), 
+      tickfont = list(size = 18)  # Font size for Y-axis ticks
+    ),
+    legend = list(title = list(text = "Body Parts"))
+  )
+
+# Display the plotly plot
+plotly_plot
+
+
+
+
+
+
+
+# with ggplot instead
+plotData <- plotData %>%
+  mutate(dataImageContrast_short = recode(dataImageContrast,
+                                          "ForeheadGtAll" = "Forehead",
+                                          "FootGtAll" = "Toes",  
+                                          "HandGtAll" = "Thumbs",
+                                          "LipsGtAll" = "Lips",
+                                          "TongueGtAll" = "Tongue"))
+
+# Create the 2D scatter plot with jitter using ggplot2
+ggplot_plot <- ggplot(plotData, aes(x = jitter(worldCoordX, amount = 0.1), 
+                                    y = jitter(worldCoordZ, amount = 0.1), 
+                                    color = dataImageContrast_short, 
+                                    shape = group)) +
+  geom_point(size = 4) +  # Adjust point size
+  scale_shape_manual(values = c(16, 17)) +  # Use different shapes for groups (circle and square)
+  labs(
+    title = "2D Scatter Plot",
+    x = "X-axis",
+    y = "Z-axis",
+    color = "Body Parts",  # Legend title for colors
+    shape = "Group"        # Legend title for shapes
+  ) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_text(size = 24),  # Font size for X-axis label
+    axis.title.y = element_text(size = 24),  # Font size for Y-axis label
+    axis.text.x = element_text(size = 18),   # Font size for X-axis ticks
+    axis.text.y = element_text(size = 18),   # Font size for Y-axis ticks
+    legend.title = element_text(size = 20),  # Font size for legend titles
+    legend.text = element_text(size = 16)    # Font size for legend items
+  ) +
+  coord_cartesian(xlim = c(-90, 90), ylim = c(10, 80))  # Set axis limits
+
+ggplot_plot
+# Save the plot as a PDF
+filename <- paste(pathResults, "Somatotopy_label123ab_peakVoxels_scatter_plot.pdf", sep = '')
+ggsave(filename, plot = ggplot_plot, width = 18, height = 8, units = "in", dpi = 300)
 
 
 ############### perform some stats on tValue
