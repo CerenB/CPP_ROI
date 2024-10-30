@@ -12,10 +12,11 @@ function opt = chooseContrastsAndMasks(opt)
     roiList = cellstr(roiList);
 
     % contrasts
-    contrastNames = {'Hand_gt_All','Foot_gt_All', 'Tongue_gt_All', ...
-        'Lips_gt_All', 'Forehead_gt_All'};
+%     contrastNames = {'Hand_gt_All','Foot_gt_All', 'Tongue_gt_All', ...
+%         'Lips_gt_All', 'Forehead_gt_All'};
+    contrastNames = {'Tongue_gt_All', 'Lips_gt_All'};
     correction = 'none';
-    pvalue = 0.99; % 0.99 0.001
+    pvalue = 0.001; % 0.99 0.001
     minVoxelinCLuster = 0; % 0, 20
 
     counter = 1;

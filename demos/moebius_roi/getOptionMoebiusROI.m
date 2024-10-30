@@ -18,6 +18,11 @@ function opt = getOptionMoebiusROI()
                     'ctrl001', 'ctrl002','ctrl003','ctrl004', 'ctrl005',...
                     'ctrl007', 'ctrl008', 'ctrl009', 'ctrl010', 'ctrl011', ...
                      'ctrl012', 'ctrl013','ctrl014', 'ctrl015', 'ctrl016','ctrl017'};
+                 
+% poster presentation SAW - chosen individuals                 
+%    opt.subjects = {'mbs002','mbs004', 'mbs007', ...
+%                    'ctrl001', 'ctrl002','ctrl003'};
+%                  
 
     % The directory where the data are located
     opt.dataDir = fullfile('/Users/battal/Cerens_files/fMRI/Processed/MoebiusProject/raw');

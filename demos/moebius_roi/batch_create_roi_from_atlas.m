@@ -29,34 +29,36 @@ run initCppSpm.m;
 
 opt = getOptionMoebiusROI();
 
-% % 
-% %     opt.roi.atlas = 'hcpex';
-% %     opt.roi.space = {'MNI', 'individual'};
-% %     % chosen ones: 3b = primary sensory cx, 4 = primary motor cx
-% %     opt.roi.name = {'1', '2', '3a', '3b', '4','6a', '6d', '6v', 'FEF', 'PEF'};
-% %     
-    
-
-% check the atlas labels
-%[atlasFile, lut] = getAtlasAndLut(opt.roi.atlas);
-
-%define hemisphere
-hemi = {'L', 'R'};
-
-% extract ROIs from atlas in MNI space
-for iHemi = 1:numel(hemi)
-
-  for iROI = 1:numel(opt.roi.name)
-
-    roiName = opt.roi.name{iROI};
-
-    imageName{iHemi,iROI} = extractRoiFromAtlas(opt.roi.dir, ...
-                                                opt.roi.atlas, ...
-                                                roiName, hemi{iHemi});
-
-  end
-
-end
+% 
+% opt.roi.atlas = 'hcpex';
+% % opt.roi.space = {'MNI', 'individual'};
+% opt.roi.space = {'MNI'};
+% % chosen ones: 3b = primary sensory cx, 4 = primary motor cx
+% % opt.roi.name = {'1', '2', '3a', '3b', '4','6a', '6d', '6v', 'FEF', 'PEF'};
+% opt.roi.name = {'6r'};
+% 
+% 
+% 
+% % check the atlas labels
+% [atlasFile, lut] = getAtlasAndLut(opt.roi.atlas);
+% 
+% % define hemisphere
+% hemi = {'L', 'R'};
+% 
+% % extract ROIs from atlas in MNI space
+% for iHemi = 1:numel(hemi)
+%     
+%     for iROI = 1:numel(opt.roi.name)
+%         
+%         roiName = opt.roi.name{iROI};
+%         
+%         imageName{iHemi,iROI} = extractRoiFromAtlas(opt.roi.dir, ...
+%             opt.roi.atlas, ...
+%             roiName, hemi{iHemi});
+%         
+%     end
+%     
+% end
 
 
 % individual space - ROI making
@@ -76,6 +78,8 @@ createMaskedTmaps(opt,funcFWHM);
 
 % find the centre of gravity for each Tmaps
 %opt.subjects = {'ctrl001','ctrl002'};
+% you need to change with spmT maps it is taking. currently it is only
+% label4 (motor cortex)
 [CoG, voxels] = findCentreOfGravity(opt,funcFWHM);
 
 

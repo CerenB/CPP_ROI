@@ -27,7 +27,7 @@ for iSub = 1:numel(opt.subjects)
           subjectFolder = getFFXdir(subLabel, funcFWHM, opt);
           
           maskedImagesList = spm_select('FPlist', subjectFolder, ...
-                                            '.*-099_k-0_MC-none_maskLabel-.*_spmT.nii$');
+                                            '.*-099_k-0_MC-none_maskLabel-.*4_spmT.nii$');
 
         
     %load masked images and find centre of gravity 
