@@ -1,15 +1,20 @@
-rm(list=ls()) #clean console
+rm(list = ls()) #clean console
 library(ggplot2)
 library(plotly)
 library(dplyr)
 library(Rmisc)
 
-pathResults <- '/Users/battal/Cerens_files/fMRI/Processed/MoebiusProject/derivatives/cpp_spm-roi/group/'
+# CoG euclidean distances
+path_results <-
+  paste0("/Volumes/extreme/Cerens_files/fMRI/MoebiusProject_backup/",
+    "MoebiusProject/derivatives/cpp_spm-roi/group/"
+  )
 
 ########
-data <- read.csv(paste(pathResults, 'somatotopyDiceCoeff_hcpex_202407301213.csv', sep ='/'))
+data <- read.csv(paste(path_results,
+                       "somatotopyDiceCoeff_hcpex_202407301213.csv", sep = ""))
 
-# moto in M1 
+# moto in M1
 # mototopyDiceCoeff_hcpex_label4_202409251139
 
 # both in sensory cx, area 123ab
@@ -25,65 +30,81 @@ filtered_data <- data %>%
 # Convert  to factors
 filtered_data$Hemi <- as.factor(filtered_data$Hemi)
 filtered_data$Group <- as.factor(filtered_data$Group)
-filtered_data$Pair<- as.factor(filtered_data$Pair)
+filtered_data$Pair <- as.factor(filtered_data$Pair)
 
 # Summarize the data to calculate mean, standard deviation, and standard error
-df <- summarySE(data = filtered_data, 
-                groupvars=c('Pair','Group','Hemi'),
-                measurevar='Dice', na.rm = TRUE)
+df <- summarySE(data = filtered_data,
+                groupvars = c("Pair", "Group", "Hemi"),
+                measurevar = "Dice", na.rm = TRUE)
 df
 
-# Define custom x-axis labels
-custom_labels <- c('Foot-Fore', 'Foot-Hand', 'Foot-Lips', 'Foot-T', 
-                   'Fore-Hand', 'Fore-Lips', 'Fore-T', 
-                   'Hand-Lips', 'Hand-T', 'Lips-T')
+custom_pair_order <- c(
+  "Lips-Tongue", "Forehead-Lips", "Forehead-Tongue", "Forehead-Hand",
+  "Hand-Lips", "Hand-Tongue", "Foot-Hand", "Foot-Forehead",
+  "Foot-Lips", "Foot-Tongue"
+)
+df$pair_order_dist <- match(df$Pair, custom_pair_order)
+df$Pair <- factor(df$Pair, levels = custom_pair_order)
 
+width_dist_btwn_groups <- 0.8
+errorbar_colors <- c("ctrl" = "#606060ff", "mbs" = "#448c6dff")
 
-
-p <- ggplot(df, aes(x = Pair, y = Dice, color = Group)) +
-  # Add summary points (mean) with dodge positioning
-  geom_point(position = position_dodge(width = 0.5), size = 6) + 
-  # Add error bars with dodge positioning
-  geom_errorbar(aes(ymin = Dice - se, ymax = Dice + se), 
-                width = 0.2, position = position_dodge(width = 0.5)) +
-  # Facet wrap by Hemi
-  facet_wrap(~ Hemi) +
-  # Set fixed y-axis range
-  ylim(0, 1) +  # Fix the y-axis range from 0 to 40
-  # Labels and theme customization
-  labs(x = 'Body Parts', y = 'Dice Coeff', color = "Groups") +
+bar_p <- ggplot(df, aes(x = Pair, y = Dice, fill = Group)) +
+  geom_bar(
+    stat = "identity",
+    position = position_dodge(width = width_dist_btwn_groups),
+    width = 0.8
+  ) +
+  geom_errorbar(
+    aes(ymin = Dice - se, ymax = Dice + se, color = Group),
+    width = 0.2,
+    position = position_dodge(width = width_dist_btwn_groups),
+    size = 1
+  ) +
+  geom_jitter(
+    data = filtered_data,
+    aes(x = Pair, y = Dice, color = Group, fill = Group),
+    position = position_jitterdodge(
+      jitter.width = 0.2,
+      dodge.width = width_dist_btwn_groups
+    ),
+    shape = 21, size = 2, alpha = 0.8
+  ) +
+  facet_wrap(Hemi ~ .) +
+  ylim(0, 1) +
+  scale_y_continuous(breaks = seq(0, 1, 0.2)) +
+  labs(
+    x = "Body Part pairs",
+    y = "Dice Coefficient",
+    fill = "Groups",
+    color = "Groups"
+  ) +
   theme_minimal() +
   theme(
-    # Increase axis title sizes
-    axis.title.x = element_text(size = 24),
-    axis.title.y = element_text(size = 24),
-    
-    # Increase axis tick sizes
-    axis.text.x = element_text(size = 20, angle = 45, hjust = 1),
-    axis.text.y = element_text(size = 20),
-    
-    # Increase legend title and text size
-    legend.title = element_text(size = 22),
-    legend.text = element_text(size = 20),
-    
-    # Increase facet label text size
-    strip.text = element_text(size = 22, hjust = 0.5),
-    
-    # Optional: Adjust panel grid and legend position
-    panel.grid.major.x = element_blank(),  # Optional, to reduce grid lines on x
+    text = element_text(family = "Avenir", color = "black"),
+    panel.spacing = unit(2, "lines"),
+    axis.title.x = element_text(size = 24, face = "bold"),
+    axis.title.y = element_text(size = 24, face = "bold"),
+    axis.text.x = element_text(size = 22,
+                               hjust = 1, color = "black"),
+    axis.text.y = element_text(size = 22, color = "black"),
+    legend.title = element_text(size = 24),
+    legend.text = element_text(size = 22),
+    strip.placement = "inside",
+    strip.text = element_text(size = 24, hjust = 0.5),
+    panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
-    legend.position = "top"  # Place legend on top
+    legend.position = "top"
   ) +
-  # Custom color scheme
-  scale_color_manual(values = c(
-    "ctrl" = "#FF6666", "mbs" = "#6666FF"
-  ))
+  scale_fill_manual(values = c("ctrl" = "#7b7979", "mbs" = "#63c599")) +
+  scale_color_manual(values = errorbar_colors) +
+  coord_flip()
+print(bar_p)
 
-# Print the plot
-print(p)
 
-filename <- paste(pathResults, "DiceCoeffPlot_Moto_Averaged.pdf", sep = '')
-ggsave(filename, plot = p, width = 18, height = 6, units = "in", dpi = 300)
+filename <- paste(path_results,
+                  "Horizontal_DiceCoeffPlot_somatotopy_Averaged.pdf", sep = "")
+ggsave(filename, plot = bar_p, width = 18, height = 8, units = "in", dpi = 300)
 
 
 
